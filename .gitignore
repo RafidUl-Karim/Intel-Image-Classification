@@ -1,0 +1,66 @@
+# Byte-compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Distribution/Packaging
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg
+*.whl
+
+# Logs and Debugging
+*.log
+*.trace
+*.out
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Test Coverage
+htmlcov/
+.coverage
+*.cover
+.cache
+.nox/
+.tox/
+
+# Environment Variables
+*.env
+.env.*
+
+# Miscellaneous
+*.bak
+*.tmp
+*.temp
+*.orig
+*.backup
+
+# Node modules (if using Node.js in your project)
+node_modules/
+
+# Yarn
+.yarn/
+.pnp.*
+
+# Other
+*.iml
