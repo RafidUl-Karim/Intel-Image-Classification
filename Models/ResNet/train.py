@@ -32,11 +32,15 @@ def train_model():
     for epoch in range(1, epochs + 1):
         print(f"\nEpoch {epoch}/{epochs}")
         
-        # Training
+        # Training phase
         model.train()
         train_loss, train_correct, train_total = 0.0, 0, 0
         train_bar = tqdm(total=len(train_loader), desc="Training", unit="batch")
         for inputs, labels in train_loader:
+            # Ensure inputs have the correct dimensions
+            if inputs.ndimension() == 3:  # Missing batch dimension
+                inputs = inputs.unsqueeze(0)
+            
             inputs, labels = inputs.to(device), labels.to(device)
             
             optimizer.zero_grad()
@@ -60,12 +64,16 @@ def train_model():
         epoch_train_loss = train_loss / len(train_loader.dataset)
         epoch_train_accuracy = train_correct / train_total
         
-        # Validation
+        # Validation phase
         model.eval()
         val_loss, val_correct, val_total = 0.0, 0, 0
         val_bar = tqdm(total=len(test_loader), desc="Validation", unit="batch")
         with torch.no_grad():
             for inputs, labels in test_loader:
+                # Ensure inputs have the correct dimensions
+                if inputs.ndimension() == 3:  # Missing batch dimension
+                    inputs = inputs.unsqueeze(0)
+                
                 inputs, labels = inputs.to(device), labels.to(device)
                 
                 outputs = model(inputs)

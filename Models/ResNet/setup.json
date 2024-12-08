@@ -5,19 +5,19 @@
     "pretrained": true,
     "input_shape": [3, 224, 224],
     "output_classes": 6,
-    "activation": "softmax"  
+    "activation": "softmax"
   },
   "training": {
     "batch_size": 32,
     "epochs": 100,
     "learning_rate": 0.001,
-    "optimizer": "adam",  
-    "loss_function": "cross_entropy", 
+    "optimizer": "adam",
+    "loss_function": "cross_entropy",
     "augmentation": {
       "horizontal_flip": true,
-      "rotation_range": 30, 
-      "zoom_range": 0.2, 
-      "brightness_range": [0.8, 1.2] 
+      "rotation_range": 30,
+      "zoom_range": 0.2,
+      "brightness_range": [0.8, 1.2]
     }
   },
   "dataset": {
@@ -38,6 +38,6 @@
     "tensorboard_logs_path": "./Models/ResNet/logs"
   },
   "evaluation": {
-    "metrics": ["accuracy"] 
+    "metrics": ["accuracy"]
   }
 }
