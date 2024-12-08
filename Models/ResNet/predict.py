@@ -79,9 +79,9 @@ def predict_images():
     plt.show()
 
     # Accuracy Score (Manual Check)
-    print("─" * 60)
+    print("-" * 60)  # Replacing Unicode character with a regular dash
     print(f"Accuracy Score (Manual Check): {test_accuracy:.3f}")
-    print("─" * 60)
+    print("-" * 60)  # Replacing Unicode character with a regular dash
 
 if __name__ == "__main__":
     predict_images()
