@@ -1,86 +1,103 @@
 import os
-import tensorflow as tf
-from tensorflow.keras.callbacks import EarlyStopping
+import torch
 from tqdm import tqdm
 from data_loader import prepare_datasets
 from model import create_model
 from config import load_config
 
 def train_model():
+    # Load the configuration
     config = load_config()
     
-    train_gen, test_gen = prepare_datasets(config)
-    model = create_model(config)
+    # Prepare the datasets
+    train_loader, test_loader = prepare_datasets(config)
+    
+    # Create the model, optimizer, and loss function
+    model, optimizer, loss_function = create_model(config)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     
     # Ensure checkpoint directory exists
-    checkpoint_dir = os.path.dirname(config["logging"]["checkpoint_path"])
+    checkpoint_path = config["logging"]["checkpoint_path"]
+    checkpoint_dir = os.path.dirname(checkpoint_path)
     os.makedirs(checkpoint_dir, exist_ok=True)
     
-    # EarlyStopping parameters
+    # Early stopping parameters
     patience = 5
-    best_val_loss = float('inf')
+    best_val_loss = float("inf")
     epochs_no_improve = 0
     
-    # Custom training loop with progress bar
+    # Training loop
     epochs = config["training"]["epochs"]
-    steps_per_epoch = len(train_gen)
-    val_steps = len(test_gen)
-    
     for epoch in range(1, epochs + 1):
         print(f"\nEpoch {epoch}/{epochs}")
         
-        # Training progress bar
-        train_bar = tqdm(total=steps_per_epoch, desc="Training", unit="batch")
-        train_loss, train_accuracy = [], []
-        
-        for x, y in train_gen:
-            metrics = model.train_on_batch(x, y)
-            train_loss.append(metrics[0])  # loss
-            train_accuracy.append(metrics[1])  # accuracy
+        # Training
+        model.train()
+        train_loss, train_correct, train_total = 0.0, 0, 0
+        train_bar = tqdm(total=len(train_loader), desc="Training", unit="batch")
+        for inputs, labels in train_loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            
+            optimizer.zero_grad()
+            outputs = model(inputs)
+            loss = loss_function(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            
+            train_loss += loss.item() * inputs.size(0)
+            _, predicted = torch.max(outputs, 1)
+            train_total += labels.size(0)
+            train_correct += (predicted == labels).sum().item()
             
             train_bar.set_postfix({
-                "loss": f"{metrics[0]:.4f}",
-                "accuracy": f"{metrics[1]:.4f}"
+                "loss": f"{loss.item():.4f}",
+                "accuracy": f"{(train_correct / train_total):.4f}"
             })
             train_bar.update(1)
-        
         train_bar.close()
         
-        # Validation progress bar
-        val_bar = tqdm(total=val_steps, desc="Validation", unit="batch")
-        val_loss, val_accuracy = [], []
+        epoch_train_loss = train_loss / len(train_loader.dataset)
+        epoch_train_accuracy = train_correct / train_total
         
-        for x, y in test_gen:
-            metrics = model.test_on_batch(x, y)
-            val_loss.append(metrics[0])  # loss
-            val_accuracy.append(metrics[1])  # accuracy
-            
-            val_bar.set_postfix({
-                "val_loss": f"{metrics[0]:.4f}",
-                "val_accuracy": f"{metrics[1]:.4f}"
-            })
-            val_bar.update(1)
-        
+        # Validation
+        model.eval()
+        val_loss, val_correct, val_total = 0.0, 0, 0
+        val_bar = tqdm(total=len(test_loader), desc="Validation", unit="batch")
+        with torch.no_grad():
+            for inputs, labels in test_loader:
+                inputs, labels = inputs.to(device), labels.to(device)
+                
+                outputs = model(inputs)
+                loss = loss_function(outputs, labels)
+                
+                val_loss += loss.item() * inputs.size(0)
+                _, predicted = torch.max(outputs, 1)
+                val_total += labels.size(0)
+                val_correct += (predicted == labels).sum().item()
+                
+                val_bar.set_postfix({
+                    "val_loss": f"{loss.item():.4f}",
+                    "val_accuracy": f"{(val_correct / val_total):.4f}"
+                })
+                val_bar.update(1)
         val_bar.close()
         
+        epoch_val_loss = val_loss / len(test_loader.dataset)
+        epoch_val_accuracy = val_correct / val_total
+        
         # Summary for the epoch
-        epoch_train_loss = sum(train_loss) / len(train_loss)
-        epoch_train_accuracy = sum(train_accuracy) / len(train_accuracy)
-        epoch_val_loss = sum(val_loss) / len(val_loss)
-        epoch_val_accuracy = sum(val_accuracy) / len(val_accuracy)
+        print(f"Epoch {epoch}: "
+              f"Loss={epoch_train_loss:.4f}, Accuracy={epoch_train_accuracy:.4f}, "
+              f"Val_Loss={epoch_val_loss:.4f}, Val_Accuracy={epoch_val_accuracy:.4f}")
         
-        print(f"Epoch {epoch}: Loss={epoch_train_loss:.4f}, "
-              f"Accuracy={epoch_train_accuracy:.4f}, "
-              f"Val_Loss={epoch_val_loss:.4f}, "
-              f"Val_Accuracy={epoch_val_accuracy:.4f}")
-        
-        # EarlyStopping logic
+        # Early stopping logic
         if epoch_val_loss < best_val_loss:
             best_val_loss = epoch_val_loss
             epochs_no_improve = 0
             # Save the best model
-            model.save(config["logging"]["checkpoint_path"])
-            print(f"Model improved and saved to {config['logging']['checkpoint_path']}.")
+            torch.save(model.state_dict(), checkpoint_path)
+            print(f"Model improved and saved to {checkpoint_path}.")
         else:
             epochs_no_improve += 1
             print(f"No improvement for {epochs_no_improve} epochs.")
@@ -88,7 +105,7 @@ def train_model():
         if epochs_no_improve >= patience:
             print(f"Stopping early after {patience} epochs without improvement.")
             break
-
+    
     print("Training completed.")
 
 if __name__ == "__main__":

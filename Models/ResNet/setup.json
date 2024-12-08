@@ -1,44 +1,43 @@
 {
-    "project_name": "Intel Image Classification",
-    "model": {
-      "architecture": "ResNet50",
-      "pretrained": true,
-      "input_shape": [224, 224, 3],
-      "output_classes": 6,
-      "activation": "softmax"
-    },
-    "training": {
-      "batch_size": 32,
-      "epochs": 100,
-      "learning_rate": 0.001,
-      "optimizer": "adam",
-      "loss_function": "categorical_crossentropy",
-      "augmentation": {
-        "horizontal_flip": true,
-        "rotation_range": 30,
-        "zoom_range": 0.2,
-        "brightness_range": [0.8, 1.2]
-      }
-    },
-    "dataset": {
-      "train_data_path": "./data/seg_train/seg_train",
-      "test_data_path": "./data/seg_test/seg_test",
-      "pred_data_path": "./data/seg_pred/seg_pred",
-      "class_labels": [
-        "buildings",
-        "forest",
-        "glacier",
-        "mountain",
-        "sea",
-        "street"
-      ]
-    },
-    "logging": {
-      "checkpoint_path": "./Models/ResNet/checkpoints/model_checkpoint.h5",
-      "tensorboard_logs_path": "./Models/ResNet/logs"
-    },
-    "evaluation": {
-      "metrics": ["accuracy"]
+  "project_name": "Intel Image Classification",
+  "model": {
+    "architecture": "ResNet50",
+    "pretrained": true,
+    "input_shape": [3, 224, 224],
+    "output_classes": 6,
+    "activation": "softmax"  
+  },
+  "training": {
+    "batch_size": 32,
+    "epochs": 100,
+    "learning_rate": 0.001,
+    "optimizer": "adam",  
+    "loss_function": "cross_entropy", 
+    "augmentation": {
+      "horizontal_flip": true,
+      "rotation_range": 30, 
+      "zoom_range": 0.2, 
+      "brightness_range": [0.8, 1.2] 
     }
+  },
+  "dataset": {
+    "train_data_path": "./data/seg_train/seg_train",
+    "test_data_path": "./data/seg_test/seg_test",
+    "pred_data_path": "./data/seg_pred/seg_pred",
+    "class_labels": [
+      "buildings",
+      "forest",
+      "glacier",
+      "mountain",
+      "sea",
+      "street"
+    ]
+  },
+  "logging": {
+    "checkpoint_path": "./Models/ResNet/checkpoints/model_checkpoint.pth",
+    "tensorboard_logs_path": "./Models/ResNet/logs"
+  },
+  "evaluation": {
+    "metrics": ["accuracy"] 
   }
-  
+}
